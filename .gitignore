@@ -32,3 +32,6 @@ pnpm-debug.log*
 # OS metadata
 .DS_Store
 Thumbs.db
+
+# Local CLI task list data (see task-list.js)
+.task-list-data.json
