@@ -1,76 +1,29 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-type ColumnId = "todo" | "doing" | "done";
-
-type KanbanCard = {
-  id: string;
-  title: string;
-  description: string;
-  column: ColumnId;
-};
-
-type Column = {
-  id: ColumnId;
-  title: string;
-  description: string;
-};
-
-const columns: Column[] = [
-  {
-    id: "todo",
-    title: "To Do",
-    description: "Ideas and tasks ready to pick up.",
-  },
-  {
-    id: "doing",
-    title: "In Progress",
-    description: "Work currently moving forward.",
-  },
-  {
-    id: "done",
-    title: "Done",
-    description: "Completed work for this demo.",
-  },
-];
-
-const sampleCards: KanbanCard[] = [
-  {
-    id: "sample-1",
-    title: "Sketch board layout",
-    description: "Create a clean three-column Kanban board.",
-    column: "done",
-  },
-  {
-    id: "sample-2",
-    title: "Add draggable cards",
-    description: "Let users move cards between workflow columns.",
-    column: "doing",
-  },
-  {
-    id: "sample-3",
-    title: "Create sample data",
-    description: "Pre-populate the board so the app feels alive.",
-    column: "todo",
-  },
-  {
-    id: "sample-4",
-    title: "Support quick cleanup",
-    description: "Allow cards to be deleted from any column.",
-    column: "todo",
-  },
-];
+import type {
+  BoardData,
+  ColumnId,
+  KanbanCard,
+  KanbanColumn,
+} from "@/lib/kanban-store";
 
 export default function Home() {
-  const [cards, setCards] = useState<KanbanCard[]>(sampleCards);
+  const [columns, setColumns] = useState<KanbanColumn[]>([]);
+  const [cards, setCards] = useState<KanbanCard[]>([]);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [targetColumn, setTargetColumn] = useState<ColumnId>("todo");
   const [draggingCardId, setDraggingCardId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    void loadBoard();
+  }, []);
 
   const cardsByColumn = useMemo(() => {
     return columns.reduce<Record<ColumnId, KanbanCard[]>>(
@@ -80,9 +33,25 @@ export default function Home() {
       },
       { todo: [], doing: [], done: [] },
     );
-  }, [cards]);
+  }, [cards, columns]);
 
-  function createCard(event: FormEvent<HTMLFormElement>) {
+  async function loadBoard() {
+    // Initial page load comes from SQLite through the API, not sample state.
+    setIsLoading(true);
+    try {
+      const board = await fetchJson<BoardData>("/api/kanban");
+      setColumns(board.columns);
+      setCards(board.cards);
+      setError(null);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function createCard(event: FormEvent<HTMLFormElement>) {
+    // Create through the API so new cards survive refreshes and restarts.
     event.preventDefault();
 
     const trimmedTitle = title.trim();
@@ -90,29 +59,59 @@ export default function Home() {
       return;
     }
 
-    const newCard: KanbanCard = {
-      id: crypto.randomUUID(),
-      title: trimmedTitle,
-      description: description.trim() || "No details added yet.",
-      column: targetColumn,
-    };
-
-    setCards((currentCards) => [newCard, ...currentCards]);
-    setTitle("");
-    setDescription("");
-    setTargetColumn("todo");
+    try {
+      const newCard = await fetchJson<KanbanCard>("/api/kanban", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          title: trimmedTitle,
+          description,
+          column: targetColumn,
+        }),
+      });
+      setCards((currentCards) => [newCard, ...currentCards]);
+      setTitle("");
+      setDescription("");
+      setTargetColumn("todo");
+      setError(null);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    }
   }
 
-  function deleteCard(cardId: string) {
-    setCards((currentCards) => currentCards.filter((card) => card.id !== cardId));
+  async function deleteCard(cardId: string) {
+    // Deletion waits for the API so a failed write does not disappear locally.
+    try {
+      await fetchJson<void>(`/api/kanban/cards/${cardId}`, { method: "DELETE" });
+      setCards((currentCards) =>
+        currentCards.filter((card) => card.id !== cardId),
+      );
+      setError(null);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    }
   }
 
-  function moveCard(cardId: string, column: ColumnId) {
-    setCards((currentCards) =>
-      currentCards.map((card) =>
-        card.id === cardId ? { ...card, column } : card,
-      ),
-    );
+  async function moveCard(cardId: string, column: ColumnId) {
+    // Drag-and-drop is persisted as a card column update.
+    try {
+      const updatedCard = await fetchJson<KanbanCard>(
+        `/api/kanban/cards/${cardId}`,
+        {
+          method: "PATCH",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ column }),
+        },
+      );
+      setCards((currentCards) =>
+        currentCards.map((card) =>
+          card.id === cardId ? updatedCard : card,
+        ),
+      );
+      setError(null);
+    } catch (requestError) {
+      setError(getErrorMessage(requestError));
+    }
   }
 
   return (
@@ -139,6 +138,7 @@ export default function Home() {
             aria-label="Column"
             value={targetColumn}
             onChange={(event) => setTargetColumn(event.target.value as ColumnId)}
+            disabled={!columns.length}
           >
             {columns.map((column) => (
               <option key={column.id} value={column.id}>
@@ -146,11 +146,15 @@ export default function Home() {
               </option>
             ))}
           </select>
-          <Button type="submit">Add card</Button>
+          <Button disabled={!columns.length} type="submit">
+            Add card
+          </Button>
+          {error ? <p className="form-error">{error}</p> : null}
         </form>
       </section>
 
       <section className="board" aria-label="Kanban board">
+        {isLoading ? <div className="empty-state">Loading board...</div> : null}
         {columns.map((column) => (
           <div
             className="column"
@@ -160,7 +164,7 @@ export default function Home() {
               event.preventDefault();
               const cardId = event.dataTransfer.getData("text/plain");
               if (cardId) {
-                moveCard(cardId, column.id);
+                void moveCard(cardId, column.id);
               }
               setDraggingCardId(null);
             }}
@@ -194,7 +198,7 @@ export default function Home() {
                   </div>
                   <Button
                     aria-label={`Delete ${card.title}`}
-                    onClick={() => deleteCard(card.id)}
+                    onClick={() => void deleteCard(card.id)}
                     type="button"
                     variant="ghost"
                   >
@@ -212,4 +216,24 @@ export default function Home() {
       </section>
     </main>
   );
+}
+
+async function fetchJson<T>(url: string, init?: RequestInit): Promise<T> {
+  // Shared response handling keeps write failures visible to the UI.
+  const response = await fetch(url, { cache: "no-store", ...init });
+  if (response.status === 204) {
+    return undefined as T;
+  }
+
+  const body = await response.json();
+  if (!response.ok) {
+    throw new Error(body.error ?? "Request failed.");
+  }
+
+  return body as T;
+}
+
+function getErrorMessage(error: unknown) {
+  // Convert unknown thrown values into one user-facing message string.
+  return error instanceof Error ? error.message : "Something went wrong.";
 }

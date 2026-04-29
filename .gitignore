@@ -35,3 +35,12 @@ Thumbs.db
 
 # Local CLI task list data (see task-list.js)
 .task-list-data.json
+
+# Local SQLite app data
+data/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.db
+*.db-shm
+*.db-wal
