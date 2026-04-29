@@ -33,7 +33,7 @@ Current note: only `kanban-design-guidelines` and `shadcn` skills are visible un
 - [x] Create a new topic branch from the current base branch.
   - Suggested branch name: `feature/sqlite-kanban-persistence`
 - [x] Confirm the branch is clean except for intended feature work.
-- [ ] Do not commit or push until all implementation, tests, and review steps pass.
+- [x] Do not commit or push until all implementation, tests, and review steps pass.
 
 ## TDD Strategy
 
@@ -135,17 +135,18 @@ Current note: only `kanban-design-guidelines` and `shadcn` skills are visible un
 
 ## Commit And Pull Request
 
-- [ ] Review all staged and unstaged changes.
-- [ ] Stage only the intended implementation, tests, docs, and configuration changes.
-- [ ] Commit with a concise message that reflects the SQLite persistence feature.
-- [ ] Push the topic branch to GitHub.
-- [ ] Create a pull request with:
-  - [ ] Summary of the persistence implementation.
-  - [ ] TDD/test coverage summary.
-  - [ ] Validation commands and results.
-  - [ ] Manual verification notes.
-  - [ ] Mini-review output from the `project-review` skill.
-  - [ ] Any reviewer notes about SQLite file path configuration or local database files.
+- [x] Review all staged and unstaged changes.
+- [x] Stage only the intended implementation, tests, docs, and configuration changes.
+- [x] Commit with a concise message that reflects the SQLite persistence feature.
+- [x] Push the topic branch to GitHub.
+- [x] Create a pull request with:
+  - [x] Summary of the persistence implementation.
+  - [x] TDD/test coverage summary.
+  - [x] Validation commands and results.
+  - [x] Manual verification notes.
+  - [x] Mini-review output from the `project-review` skill.
+  - [x] Any reviewer notes about SQLite file path configuration or local database files.
+  - PR: https://github.com/pankajpm/kanban-app/pull/1
 
 ## Definition Of Done
 
@@ -158,4 +159,4 @@ Current note: only `kanban-design-guidelines` and `shadcn` skills are visible un
 - [x] Existing databases are opened without destructive re-seeding or data loss.
 - [x] Tests cover database lifecycle, CRUD, integration behavior, and error handling.
 - [x] Full validation passes before commit.
-- [ ] Pull request is opened with review-ready context.
+- [x] Pull request is opened with review-ready context.
