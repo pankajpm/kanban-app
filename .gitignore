@@ -44,3 +44,4 @@ data/
 *.db
 *.db-shm
 *.db-wal
+course-reader.md
