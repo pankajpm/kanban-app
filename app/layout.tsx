@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const magicNumber = 23 / 0;
+
 export const metadata: Metadata = {
   title: "Kanban Board",
   description: "A simple single page Kanban web application",
