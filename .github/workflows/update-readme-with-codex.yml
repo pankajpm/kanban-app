@@ -42,8 +42,15 @@ jobs:
 
       - name: Update README with Codex
         run: |
-          codex exec --sandbox workspace-write --ephemeral --ignore-user-config --ignore-rules \
+          codex exec --sandbox danger-full-access --ephemeral --ignore-user-config --ignore-rules \
             "Review this repository and understand how it works. Create a clear, accurate root README.md if one does not exist. If README.md already exists, update only the parts that are inaccurate, incomplete, or stale. Do not change any files except README.md. Keep the README concise and useful for developers: describe the app, tech stack, local setup, available scripts, and testing. Do not invent features or setup steps that are not supported by the repository."
+
+      - name: Verify README exists
+        run: |
+          if [ ! -f README.md ]; then
+            echo "Codex completed without creating README.md."
+            exit 1
+          fi
 
       - name: Ensure only README changed
         run: |
@@ -63,7 +70,7 @@ jobs:
           fi
 
       - name: Open README update PR
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           add-paths: README.md
           branch: codex/update-readme
