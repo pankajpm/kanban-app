@@ -160,4 +160,15 @@ describe("Kanban home page", () => {
       expect(screen.queryByText("Create sample data")).not.toBeInTheDocument();
     });
   });
+
+  it("renders the theme toggle button", async () => {
+    mockKanbanApi();
+    render(<Home />);
+
+    // Wait for the board to load, then verify the toggle is present.
+    await screen.findByRole("heading", { name: "To Do" });
+    expect(
+      screen.getByRole("button", { name: /switch to/i }),
+    ).toBeInTheDocument();
+  });
 });
