@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import type {
   BoardData,
   ColumnId,
@@ -116,6 +117,9 @@ export default function Home() {
 
   return (
     <main className="page-shell">
+      <div className="page-header">
+        <ThemeToggle />
+      </div>
       <section className="hero">
         <div>
           <p className="eyebrow">Simple Kanban</p>
