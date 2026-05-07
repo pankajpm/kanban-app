@@ -18,6 +18,7 @@ jobs:
 
     env:
       CODEX_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      README_UPDATE_TOKEN: ${{ secrets.README_UPDATE_TOKEN }}
 
     steps:
       - name: Check out repository
@@ -37,6 +38,13 @@ jobs:
         run: |
           if [ -z "$CODEX_API_KEY" ]; then
             echo "Missing OPENAI_API_KEY repository secret required by the Codex CLI."
+            exit 1
+          fi
+
+      - name: Validate README update token
+        run: |
+          if [ -z "$README_UPDATE_TOKEN" ]; then
+            echo "Missing README_UPDATE_TOKEN repository secret required to create PRs that trigger CI."
             exit 1
           fi
 
@@ -72,6 +80,7 @@ jobs:
       - name: Open README update PR
         uses: peter-evans/create-pull-request@v8
         with:
+          token: ${{ secrets.README_UPDATE_TOKEN }}
           add-paths: README.md
           branch: codex/update-readme
           commit-message: Update README with Codex
