@@ -1,6 +1,6 @@
 # Kanban App
 
-A small single-page Kanban board built with Next.js. The app lets users create cards, delete cards, and drag cards between the fixed `To Do`, `In Progress`, and `Done` columns. Board data is served through Next.js API route handlers and persisted in SQLite.
+A small single-page Kanban board built with Next.js. The app lets users create cards, delete cards, drag cards between the fixed `To Do`, `In Progress`, and `Done` columns, and switch between light and dark themes. Board data is served through Next.js API route handlers and persisted in SQLite.
 
 ## Tech Stack
 
@@ -11,6 +11,8 @@ A small single-page Kanban board built with Next.js. The app lets users create c
 - Vitest, Testing Library, and jsdom
 
 ## Local Setup
+
+Use Node.js 22 to match CI.
 
 Install dependencies:
 
